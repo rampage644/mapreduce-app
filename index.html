@@ -55,14 +55,14 @@
             if (!account)
                 account = "g_115507837688591025035";
 
-            document.querySelector("#input-files").value = "swift://" + account + "/mapreduce/input/wordcount/*input.txt";
+            document.querySelector("#input-files").value = "swift://" + account + "/wordcount/input/*.txt";
         }
         function outputFilesBtnClicked() {
             var account = getURLParameter('account');
             if (!account)
                 account = "g_115507837688591025035";
 
-            document.querySelector("#output-files").value = "swift://" + account + "/mapreduce/output/*.txt";
+            document.querySelector("#output-files").value = "swift://" + account + "/wordcount/output/*.txt";
         }
         function restoreDefaultSourceCode() {
             var path = ".gui/tsergei/mapreduce-python/0.1/";
@@ -102,6 +102,8 @@
                     system_map[0].file_list[0].path = document.querySelector("#input-files").value;
                     // reducers output files
                     system_map[1].file_list[0].path = document.querySelector("#output-files").value;
+                    system_map[1].count = parseInt(document.querySelector("#output-count").value);
+
 
                     // creating tar-archive, write json first
                     var out = tape.append("boot/system.map", JSON.stringify(system_map));
@@ -119,10 +121,15 @@
                             FileManager.Report.create(report);
                             FileManager.Report.full();
 
+                            // list of container and directories
+                            // elements[0] - container
+                            // elements[1..N] - directories
+                            var elements = system_map[1].file_list[0].path.split('/').slice(3, -1);
+
                             SwiftV1.Container.get({
-                                containerName:'mapreduce', 
+                                containerName: elements[0], 
                                 delimiter:'/', 
-                                prefix:'output/',
+                                prefix: elements.slice(1).join('/') + '/',
                                 success: function (data) {
                                     var scrollingContentEl = document.querySelector('#report-containter');
                                     var resultLinks = document.querySelector('#resultLinks').content;
@@ -141,7 +148,16 @@
                                     out_path = system_map[1].file_list[0].path;
                                     // prepend storage url, remove swift:// and last "*.txt" token
                                     out_path = ZLitestackDotCom.getStorageUrl() + out_path.split('/').slice(2, -1).join('/');
+                                    // regexp to check against filename
+                                    re = /red-\d+\.+/;
+                                    count = 0;
                                     for (var i=1;i<files.length-1;i++) {
+                                        if (count >= system_map[1].count)
+                                            break;
+                                        // filename matches pattern
+                                        if (!re.test(files[i]))
+                                            continue;
+
                                         a = document.createElement('a');
                                         // append filename without directory to url
                                         a.setAttribute('href', out_path + '/' + files[i].split('/').pop());
@@ -151,6 +167,8 @@
                                         li.appendChild(a);
 
                                         ul.appendChild(li);
+
+                                        count++;
                                     }
 
 
@@ -362,6 +380,9 @@
                     <div class="pure-control-group">
                         <label for="output-files" class="pure-radio">Output files path:</label><input class="pure-input-2-3" id="output-files" type="text" style="width:50%" name="output-files" value="" >
                         <button id="output-files-button" class="pure-button" onclick="outputFilesBtnClicked()">Revert to default</button>
+                    </div>
+                    <div class="pure-control-group">
+                        <label for="output-count" class="pure-radio">Reduce nodes count:</label><input class="pure-input" id="output-count" type="text" name="output-count" value="4" >
                     </div>
                 </fieldset>
             </div>
