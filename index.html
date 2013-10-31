@@ -151,7 +151,7 @@
                                     // regexp to check against filename
                                     re = /red-\d+\.+/;
                                     count = 0;
-                                    for (var i=1;i<files.length-1;i++) {
+                                    for (var i=0;i<files.length;i++) {
                                         if (count >= system_map[1].count)
                                             break;
                                         // filename matches pattern
@@ -226,9 +226,7 @@
 
                     document.querySelector('#system-time-tr').insertAdjacentHTML('beforeend', td(report.billing.nodes[i]['systemTime']));
                     document.querySelector('#user-time-tr').insertAdjacentHTML('beforeend', td(report.billing.nodes[i]['userTime']));
-                    document.querySelector('#memory-used-tr').insertAdjacentHTML('beforeend', td(report.billing.nodes[i]['memoryUsed']));
 
-                    document.querySelector('#swap-used-tr').insertAdjacentHTML('beforeend', td(report.billing.nodes[i]['SwapUsed']));
                     document.querySelector('#reads-from-disk-tr').insertAdjacentHTML('beforeend', td(report.billing.nodes[i]['readsFromDisk']));
                     document.querySelector('#bytes-read-from-disk-tr').insertAdjacentHTML('beforeend', td(report.billing.nodes[i]['bytesReadFromDisk']));
 
@@ -468,16 +466,6 @@
                                 <tr id="user-time-tr">
                                     <td class="billing-report-part-name">
                                         User time
-                                    </td>
-                                </tr>
-                                <tr id="memory-used-tr">
-                                    <td class="billing-report-part-name">
-                                        Memory used
-                                    </td>
-                                </tr>
-                                <tr id="swap-used-tr">
-                                    <td class="billing-report-part-name">
-                                        Swap used
                                     </td>
                                 </tr>
                                 <tr id="reads-from-disk-tr">
