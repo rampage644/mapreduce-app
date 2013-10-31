@@ -2,7 +2,7 @@
     {
         "name" : "map",
         "exec" : {
-            "path": "file://python:python.nexe",
+            "path": "file://python:python",
             "env" : {
                 "MAP_CHUNK_SIZE": "100485700"
             },
@@ -26,7 +26,7 @@
     {
         "name" : "red",
         "exec" : {
-            "path": "file://python:python.nexe",
+            "path": "file://python:python",
             "env" : {
             },
             "args": "reduce.py"

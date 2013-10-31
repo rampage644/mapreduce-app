@@ -2,9 +2,10 @@
 <html xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
 <head>
     <title>Dynamic mapreduce</title>
-    <script type="text/javascript" src="../../lib/FileStorage.js" ></script>
-    <script type="text/javascript" src="../../lib/pakmanaged.js" ></script>
-    <script type="text/javascript" src="../../lib/jquery.js" ></script>
+    <script type="text/javascript" src="lib/FileStorage.js" ></script>
+    <script type="text/javascript" src="lib/Swift.js" ></script>
+    <script type="text/javascript" src="lib/pakmanaged.js" ></script>
+    <script type="text/javascript" src="lib/jquery.js" ></script>
     <script>
         var mappy = "";
         var reducepy = "";
@@ -13,6 +14,9 @@
             inputFilesBtnClicked();
             outputFilesBtnClicked();
             restoreDefaultSourceCode();
+
+            Auth.useZLitestackDotCom();
+            Auth.init();
         }
         function getURLParameter(name) {
             return decodeURI(
@@ -51,7 +55,7 @@
             if (!account)
                 account = "g_115507837688591025035";
 
-            document.querySelector("#input-files").value = "swift://" + account + "/mapreduce/input/*input.txt";
+            document.querySelector("#input-files").value = "swift://" + account + "/mapreduce/input/wordcount/*input.txt";
         }
         function outputFilesBtnClicked() {
             var account = getURLParameter('account');
@@ -78,7 +82,7 @@
             });
 
             FileStorage.getFile({
-                path: path + 'mapreduce.py',
+                path: path + 'reduce.py',
                 success: function (data) {
                     reducepy = data;
                 }
@@ -114,6 +118,44 @@
 
                             FileManager.Report.create(report);
                             FileManager.Report.full();
+
+                            SwiftV1.Container.get({
+                                containerName:'mapreduce', 
+                                delimiter:'/', 
+                                prefix:'output/',
+                                success: function (data) {
+                                    var scrollingContentEl = document.querySelector('#report-containter');
+                                    var resultLinks = document.querySelector('#resultLinks').content;
+                                    console.log(document.querySelector('#report'));
+                                    scrollingContentEl.insertBefore(resultLinks.cloneNode(true), 
+                                        document.querySelector('#report'));
+
+                                    ul = scrollingContentEl.querySelector('#link-list');
+                                    // we're getting list of files with directory
+                                    files = data.split('\n');
+                                    // skip first entry - directory
+                                    // skip last entry - empty line
+
+                                    // construct download url
+                                    // get output path 
+                                    out_path = system_map[1].file_list[0].path;
+                                    // prepend storage url, remove swift:// and last "*.txt" token
+                                    out_path = ZLitestackDotCom.getStorageUrl() + out_path.split('/').slice(2, -1).join('/');
+                                    for (var i=1;i<files.length-1;i++) {
+                                        a = document.createElement('a');
+                                        // append filename without directory to url
+                                        a.setAttribute('href', out_path + '/' + files[i].split('/').pop());
+                                        a.appendChild(document.createTextNode(files[i]))
+
+                                        li = document.createElement('li');
+                                        li.appendChild(a);
+
+                                        ul.appendChild(li);
+                                    }
+
+
+                                }
+                            });
                         }
                         else {
                             document.querySelector("#results-text").innerHTML = "Something went wrong..";
@@ -200,6 +242,10 @@
         };
 
         FileManager.Report.remove = function () {
+            var resultLinks = document.querySelector('#result-links');
+            if (resultLinks)
+                resultLinks.parentNode.removeChild(resultLinks);
+
             var billingEl = document.querySelector('#report');
             if (billingEl)
                 billingEl.parentNode.removeChild(billingEl);
@@ -238,19 +284,15 @@
 
 
     </script>
-    <link rel="stylesheet" href="../../css/pure-min.css" type="text/css">
+    <link rel="stylesheet" href="css/pure-min.css" type="text/css">
     <style>
         div.content {
             width: 1000px;
             margin: 0 auto;
         }
         .pure-button-ts {
-            width: 150px;
+            width: 170px;
             background: rgb(28, 184, 65);
-        }
-        .pure-button-wc {
-            width: 150px;
-            background: rgb(32, 124, 184);
         }
 
         p#source-buttons > * {
@@ -304,10 +346,7 @@
                 <button id="generate-ts-btn" class="pure-button pure-button-ts" onclick="restoreDefaultSourceCode()">Revert to default</button>
             </p>
             <!--<textarea id="editor" rows=20 cols=40 class="full-width"></textarea>-->
-            <div id="editor" class="full-width">function foo(items) {
-                var x = "All this is syntax highlighted";
-                return x;
-                }</div>
+            <div id="editor" class="full-width"></div>
         </div>
 
         <div>
@@ -332,6 +371,12 @@
         <h3>Results</h3>
         <p id="results-text"></p>
         <div id="report-containter">
+            <template id="resultLinks">
+                <div id="result-links" >
+                    <ul id="link-list">
+                    </ul>
+                </div>
+            </template>
             <template id="outputTemplate">
                 <div id="report-output" class="pure-form">
                     <h3>Output:</h3>
@@ -464,11 +509,11 @@
         </div>
     </div>
 </div>
-<script src="../../lib/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="lib/ace.js" type="text/javascript" charset="utf-8"></script>
 <script>
     var editor = ace.edit("editor");
     editor.setTheme("ace/theme/xcode");
-    editor.getSession().setMode("ace/mode/c_cpp");
+    editor.getSession().setMode("ace/mode/python");
 </script>
 </body>
 </html>
