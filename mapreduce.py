@@ -4,6 +4,9 @@ import sys
 import _zmapreduce
 
 import hashlib
+import re
+
+ptrn = re.compile("([\w][\w']*\w)")
 
 def hashf(s):
 	return hashlib.md5(s).hexdigest()
@@ -19,7 +22,7 @@ def Reduce(buffer):
 
 def Map(data, size, last_chunk, buffer):
 	string = data.tobytes()
-	for word in string.split():
+	for word in ptrn.findall(string):
 		r = buffer.append()
 		r.key = word
 		r.value = "1"
